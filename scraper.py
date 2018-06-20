@@ -85,8 +85,8 @@ def convert_mth_strings ( mth_string ):
 
 #### VARIABLES 1.0
 
-entity_id = "E2632_BDC_gov"
-url = "https://www.broadland.gov.uk/info/200197/spending_and_transparency/339/council_spending_over_250"
+entity_id = "E2832_DDC_gov"
+url = "https://www.daventrydc.gov.uk/your-council/council-budgets-spending/transparency/expenditure-over-500/"
 errors = 0
 data = []
 
@@ -98,27 +98,26 @@ soup = BeautifulSoup(html, 'lxml')
 
 #### SCRAPE DATA
 
-links = soup.find('div', 'editor').find_all('a', href=True)
-for link in links:
-    if 'http' not in link['href']:
-        year_url = 'https://www.broadland.gov.uk' + link['href']
+year_links = soup.find('div', 'element-panel-alpha-body-content-inner clearfix').find_all('a')
+for year_link in year_links:
+    if 'http' not in year_link['href']:
+        year_url = 'https://www.daventrydc.gov.uk' + year_link['href']
     else:
-        year_url = link['href']
+        year_url = year_link['href']
     year_html = urllib2.urlopen(year_url)
     year_soup = BeautifulSoup(year_html, 'lxml')
-    blocks = year_soup.find_all('span', 'download-listing__file-tag download-listing__file-tag--type')
+    blocks = year_soup.find('h3', text=re.compile('Comma Separated Values')).find_next('ul').find_all('a')
     for block in blocks:
-        if 'CSV' in block.text:
-            url = block.find_next('a')['href']
-            if 'http' not in url:
-                url = 'https://www.broadland.gov.uk' + url
-            else:
-                url = url
-            file_name = block.find_next('a')['aria-label']
-            csvMth = file_name.split()[-2][:3]
-            csvYr = file_name.split()[-1]
-            csvMth = convert_mth_strings(csvMth.upper())
-            data.append([csvYr, csvMth, url])
+        file_name = block.text.strip()
+        url = block['href']
+        if 'http' not in url:
+            url = 'https://www.daventrydc.gov.uk' + url
+        else:
+            url = url
+        csvMth = file_name[:3]
+        csvYr = file_name.split()[1]
+        csvMth = convert_mth_strings(csvMth.upper())
+        data.append([csvYr, csvMth, url])
 
 
 #### STORE DATA 1.0
